@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Engagement Portal - Gallup Q12 & Q12+</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for desktop */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Full Screen Overlay for Login */
+        #auth-overlay {
+            transition: opacity 0.4s ease-out, visibility 0.4s;
+        }
+        #auth-overlay.hidden-overlay {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        #main-app-container {
+            transition: opacity 0.4s ease-in, filter 0.4s ease-in;
+        }
+        #main-app-container.blurred-out {
+            opacity: 0;
+            filter: blur(10px);
+            pointer-events: none;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Professional PDF Print Layout */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 1.5cm; /* Margin profesional untuk dokumen */
+            }
+            body, html {
+                background-color: white !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            /* Hilangkan elemen UI yang tidak perlu dicetak */
+            aside, header, #auth-overlay, button, #toast, .nav-btn, .print-hidden {
+                display: none !important;
+            }
+            /* Sesuaikan container utama agar tidak tersembunyi */
+            #main-app-container, .overflow-y-auto {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+                width: 100% !important;
+                background: white !important;
+            }
+            /* Sembunyikan tab yang tidak aktif, pastikan tab aktif tercetak penuh */
+            .tab-pane {
+                display: none;
+            }
+            .tab-pane:not(.hidden) {
+                display: block !important;
+            }
+            .flex-grow, .max-w-7xl, .p-6, .md\:p-8 {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            #printable-report-area {
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            /* Pertahankan layout Grid (Jangan turun ke bawah seperti mobile) */
+            .grid {
+                display: grid !important;
+            }
+            .md\:grid-cols-4 { grid-template-columns: repeat(4, 1fr) !important; gap: 1rem !important; }
+            .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr) !important; gap: 1.5rem !important; }
+            .md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr) !important; gap: 1.5rem !important; }
+            
+            /* Hindari elemen spesifik terpotong antar halaman (tapi biarkan wrapper mengalir wajar) */
+            tr, canvas, .print-card-avoid {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            h2, h3, h4 {
+                page-break-after: avoid !important;
+            }
+            p, li {
+                page-break-inside: auto !important;
+            }
+            /* Pertahankan warna background */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            canvas {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen w-full overflow-hidden">
+
+    <!-- LOGIN OVERLAY -->
+    <!-- Modified to be fully scrollable if screen is too short -->
+    <div id="auth-overlay" class="fixed inset-0 z-[100] bg-slate-900 overflow-y-auto">
+        <!-- Background decorative elements -->
+        <div class="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 opacity-90 pointer-events-none"></div>
+        <div class="fixed inset-0 bg-[url('https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-20 pointer-events-none"></div>
+        
+        <!-- Flex Wrapper to allow natural scrolling for tall content -->
+        <div class="min-h-screen flex flex-col items-center justify-center p-4">
+            <div class="relative z-10 w-full max-w-lg p-8 md:p-12 bg-white rounded-3xl shadow-2xl flex flex-col items-center transform transition-all my-auto">
+                
+                <!-- Recreated Gallup Q12+ Logo to match uploaded image exactly without external links -->
+                <div class="w-full mb-8 flex flex-col items-center justify-center select-none">
+                    <div class="w-32 h-32 rounded-full border-[4px] border-[#009a44] flex items-center justify-center mb-6">
+                        <span class="text-6xl font-medium tracking-tighter text-black -ml-3 mt-1">Q<sup class="text-[32px] font-bold tracking-normal align-top ml-0.5 mt-2 inline-block">12<sup class="text-[12px] font-bold align-top ml-0.5">®</sup><span class="text-[#009a44] ml-0.5">+</span></sup></span>
+                    </div>
+                    <p class="text-center text-slate-800 text-[19px] leading-[1.3] font-light tracking-wide mb-6">Redefining workplace<br>engagement for the new era.</p>
+                    <p class="text-center text-black font-bold tracking-[0.25em] text-sm relative">GALLUP<sup class="text-[8px] absolute top-0 -right-2.5">®</sup></p>
+                </div>
+                
+                <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight text-center mb-2">Portal Keterikatan</h1>
+                <p class="text-sm text-slate-500 text-center mb-8">Silakan masukkan sandi otorisasi tahunan untuk mengakses panel Gallup Q12+.</p>
+                
+                <div class="w-full space-y-4">
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5"></i>
+                        <input type="password" id="auth-password" placeholder="Masukkan Sandi..." class="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium text-slate-700 placeholder-slate-400" onkeypress="handleAuthKeyPress(event)">
+                    </div>
+                    <div id="auth-error" class="hidden text-rose-500 text-xs font-semibold text-center bg-rose-50 p-2 rounded-lg border border-rose-100 animate-pulse">Sandi salah. Coba lagi.</div>
+                    <button onclick="attemptLogin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2">
+                        Buka Kunci Akses <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-slate-100 w-full text-center">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Developer</p>
+                    <p class="text-xs text-slate-600 font-semibold mt-1">Iman N Bajuasijadji</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER (Hidden initially) -->
+    <div id="main-app-container" class="blurred-out flex flex-col md:flex-row h-screen w-full bg-slate-50">
+        <!-- Custom Toast Notification Box -->
+        <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 ease-out bg-emerald-600 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 print-hidden">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span id="toast-message" class="font-medium text-sm">Aksi berhasil dilakukan</span>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-80 bg-slate-900 text-slate-100 flex-shrink-0 flex flex-col border-r border-slate-800 z-10 shadow-xl md:h-full print-hidden">
+            <!-- Logo and Brand -->
+            <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-emerald-500 text-slate-900 p-2.5 rounded-xl font-bold flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                        <span class="text-xl">Ψ</span>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base leading-tight tracking-wide">PORTAL EE</h1>
+                        <p class="text-[10px] text-emerald-400 font-semibold tracking-widest uppercase">Employee Engagement Portal</p>
+                    </div>
+                </div>
+                <!-- Mobile Menu Toggle Button -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav id="sidebar-nav" class="hidden md:flex flex-col gap-1.5 p-4 flex-grow overflow-y-auto">
+                <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider px-3 mb-2">Menu Utama</p>
+                <button onclick="switchTab('tab-literasi')" data-tab="tab-literasi" class="nav-btn active flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 bg-emerald-600 text-white shadow-lg shadow-emerald-600/10">
+                    <i data-lucide="book-open" class="w-5 h-5"></i>
+                    <span>Literasi &amp; Data Gallup</span>
+                </button>
+                <button onclick="switchTab('tab-q12')" data-tab="tab-q12" class="nav-btn flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                    <span>Survei Gallup Q12</span>
+                </button>
+                <button onclick="switchTab('tab-q12-plus')" data-tab="tab-q12-plus" class="nav-btn flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                    <span>Survei Gallup Q12+</span>
+                </button>
+                <button onclick="switchTab('tab-box-analysis')" data-tab="tab-box-analysis" class="nav-btn flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="percent" class="w-5 h-5"></i>
+                    <span>Top &amp; Second Box</span>
+                </button>
+                <button onclick="switchTab('tab-report')" data-tab="tab-report" class="nav-btn flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span>Laporan Eksekutif</span>
+                </button>
+
+                <!-- Consulting Footer Info -->
+                <div class="mt-auto p-4 bg-slate-950/60 rounded-xl border border-slate-800/80 mt-6">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Pengembangan SDM</span>
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed">Asistensi Pengelolaan Kepuasan &amp; Keterlekatan Pekerja.</p>
+                    <div class="mt-3 flex items-center gap-2 text-xs text-slate-300 font-semibold border-t border-slate-800 pt-2.5">
+                        <i data-lucide="user" class="w-4 h-4 text-emerald-400"></i>
+                        <span>Iman N Bajuasijadji</span>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <main class="flex-grow flex flex-col min-w-0 overflow-hidden h-full">
+            <!-- Top Navbar -->
+            <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 flex items-center justify-between px-6 md:px-8 z-10 print-hidden">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs bg-slate-100 border border-slate-200 text-slate-600 font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Kategori: SDM &amp; Budaya</span>
+                </div>
+                <div class="text-slate-400 text-xs hidden sm:block font-medium">
+                    <button onclick="lockApplication()" class="flex items-center gap-1.5 hover:text-rose-500 transition border border-transparent hover:border-rose-200 px-2 py-1 rounded-md">
+                        <i data-lucide="lock" class="w-3.5 h-3.5"></i> Kunci Layar
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dynamic Page Wrapper (Scrollable area) -->
+            <div class="flex-grow overflow-y-auto bg-slate-50 relative">
+                <div class="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-8">
+
+                    <!-- TAB 1: LITERASI & DATA GALLUP -->
+                    <section id="tab-literasi" class="tab-pane space-y-8">
+                        <!-- Banner Welcome -->
+                        <div class="relative bg-slate-900 rounded-3xl overflow-hidden shadow-2xl print-card-avoid">
+                            <div class="absolute inset-0 bg-gradient-to-r from-slate-950 to-emerald-950/80 mix-blend-multiply"></div>
+                            <!-- Decorative Background Mesh -->
+                            <div class="absolute inset-y-0 right-0 w-1/2 opacity-10 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                            <div class="relative p-8 md:p-12 space-y-4 max-w-2xl">
+                                <span class="text-xs bg-emerald-500/20 text-emerald-300 font-bold tracking-widest uppercase px-3 py-1.5 rounded-full border border-emerald-500/30">PORTAL ANALISIS</span>
+                                <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight">Pengelolaan Keterlekatan Pekerja (Employee Engagement)</h2>
+                                <p class="text-slate-300 text-sm md:text-base leading-relaxed">
+                                    Mendorong produktivitas, profitabilitas, serta kebahagiaan karyawan di era modern melalui pendekatan diagnostik dan terukur yang diakui secara global.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Definisi Teoretis -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 print-card-avoid">
+                                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-bold">
+                                    K
+                                </div>
+                                <h4 class="font-bold text-lg text-slate-800">Definisi Khan (1990)</h4>
+                                <p class="text-slate-500 text-xs leading-relaxed">
+                                    "Hasrat anggota organisasi terhadap pekerjaan mereka dimana mereka bekerja, dan mengekspresikan diri mereka secara fisik, kognitif, dan emosional selama melakukan pekerjaan."
+                                </p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 print-card-avoid">
+                                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
+                                    L
+                                </div>
+                                <h4 class="font-bold text-lg text-slate-800">Definisi Lockwood (2007)</h4>
+                                <p class="text-slate-500 text-xs leading-relaxed">
+                                    Konsep kompleks yang dipengaruhi oleh budaya kerja, komunikasi organisasi, gaya kepemimpinan yang menumbuhkan kepercayaan dan penghargaan, serta reputasi organisasi.
+                                </p>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 print-card-avoid">
+                                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center font-bold">
+                                    B
+                                </div>
+                                <h4 class="font-bold text-lg text-slate-800">Bakker, Demerouti (2012)</h4>
+                                <p class="text-slate-500 text-xs leading-relaxed">
+                                    Keadaan pikiran yang positif, produktif, terkait pekerjaan yang ditandai oleh tiga dimensi utama: <strong class="text-slate-700">Semangat (Vigor)</strong>, <strong class="text-slate-700">Dedikasi (Dedication)</strong>, and <strong class="text-slate-700">Absorpsi (Absorption)</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Gallup Global & Emotional Insights -->
+                        <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-8 print-card-avoid">
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-800">State of the Global Workplace: 2022</h3>
+                                <p class="text-slate-500 text-xs">Proporsi keterikatan dan emosi negatif harian pekerja secara global.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/40 p-6 rounded-2xl border border-emerald-200 flex items-center gap-4">
+                                    <div class="p-3 bg-emerald-500 text-slate-900 rounded-xl shadow-lg shadow-emerald-500/20">
+                                        <i data-lucide="smile" class="w-6 h-6 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <span class="block text-3xl font-extrabold text-emerald-800">21%</span>
+                                        <span class="text-[10px] uppercase font-bold text-emerald-600 tracking-wider">Engaged at Work</span>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100/40 p-6 rounded-2xl border border-indigo-200 flex items-center gap-4">
+                                    <div class="p-3 bg-indigo-500 text-slate-900 rounded-xl shadow-lg shadow-indigo-500/20">
+                                        <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <span class="block text-3xl font-extrabold text-indigo-800">33%</span>
+                                        <span class="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">Thriving Wellbeing</span>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gradient-to-br from-rose-50 to-rose-100/40 p-6 rounded-2xl border border-rose-200 flex items-center gap-4">
+                                    <div class="p-3 bg-rose-500 text-slate-900 rounded-xl shadow-lg shadow-rose-500/20">
+                                        <i data-lucide="flame" class="w-6 h-6 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <span class="block text-3xl font-extrabold text-rose-800">44%</span>
+                                        <span class="text-[10px] uppercase font-bold text-rose-600 tracking-wider">Daily Stress Level</span>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gradient-to-br from-amber-50 to-amber-100/40 p-6 rounded-2xl border border-amber-200 flex items-center gap-4">
+                                    <div class="p-3 bg-amber-500 text-slate-900 rounded-xl shadow-lg shadow-amber-500/20">
+                                        <i data-lucide="frown" class="w-6 h-6 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <span class="block text-3xl font-extrabold text-amber-800">21%</span>
+                                        <span class="text-[10px] uppercase font-bold text-amber-600 tracking-wider">Anger &amp; Sadness</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ASEAN and Ranking and Q12 Hierarchy Pyramid Row -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- Ranking ASEAN -->
+                            <div class="space-y-4 print-card-avoid">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-bold text-slate-800">Keterlekatan ASEAN (Ranking Q12)</h4>
+                                    <span class="text-xs font-semibold text-slate-500">Persentase (%) Karyawan Engaged</span>
+                                </div>
+                                <div class="space-y-3.5">
+                                    <!-- Filipina -->
+                                    <div>
+                                        <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                            <span>1. Filipina</span>
+                                            <span>31%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div class="bg-indigo-600 h-full rounded-full" style="width: 31%"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Thailand -->
+                                    <div>
+                                        <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                            <span>2. Thailand</span>
+                                            <span>26%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div class="bg-indigo-600 h-full rounded-full" style="width: 26%"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Cambodia -->
+                                    <div>
+                                        <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                            <span>3. Kamboja</span>
+                                            <span>26%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div class="bg-indigo-600 h-full rounded-full" style="width: 26%"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Indonesia -->
+                                    <div class="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-100">
+                                        <div class="flex justify-between text-xs font-bold text-emerald-800 mb-1">
+                                            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>4. Indonesia</span>
+                                            <span>24%</span>
+                                        </div>
+                                        <div class="w-full bg-emerald-100 h-2.5 rounded-full overflow-hidden">
+                                            <div class="bg-emerald-600 h-full rounded-full" style="width: 24%"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Vietnam -->
+                                    <div>
+                                        <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                            <span>5. Vietnam</span>
+                                            <span>23%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div class="bg-indigo-600 h-full rounded-full" style="width: 23%"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Malaysia -->
+                                    <div>
+                                        <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                            <span>6. Malaysia</span>
+                                            <span>18%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div class="bg-indigo-600 h-full rounded-full" style="width: 18%"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Singapura -->
+                                    <div>
+                                        <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                            <span>7. Singapura</span>
+                                            <span>13%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div class="bg-indigo-600 h-full rounded-full" style="width: 13%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hierarki Kebutuhan Q12 Visual -->
+                            <div class="space-y-4 print-card-avoid">
+                                <h4 class="font-bold text-slate-800 mb-4">Hierarki Kebutuhan Q12</h4>
+                                <div class="relative space-y-2 max-w-md mx-auto">
+                                    <!-- Level 4 Growth -->
+                                    <div class="bg-gradient-to-r from-emerald-800 to-emerald-700 hover:from-emerald-700 hover:to-emerald-600 transition p-4 text-center text-white rounded-xl shadow-md cursor-pointer group">
+                                        <span class="block text-xs font-bold tracking-widest text-emerald-300">LEVEL 4 - PERTUMBUHAN (GROWTH)</span>
+                                        <span class="text-sm font-semibold text-slate-100 italic group-hover:not-italic">Q11 &amp; Q12: "Bagaimana saya bertumbuh?"</span>
+                                    </div>
+                                    <!-- Level 3 Teamwork -->
+                                    <div class="bg-gradient-to-r from-emerald-700 to-emerald-600 hover:from-emerald-600 hover:to-emerald-500 transition p-4 text-center text-white rounded-xl shadow-md cursor-pointer group">
+                                        <span class="block text-xs font-bold tracking-widest text-emerald-200">LEVEL 3 - KERJASAMA TIM (TEAMWORK)</span>
+                                        <span class="text-sm font-semibold text-slate-100 italic">Q7 s/d Q10: "Apakah saya termasuk di sini?"</span>
+                                    </div>
+                                    <!-- Level 2 Individual Contribution -->
+                                    <div class="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 transition p-4 text-center text-white rounded-xl shadow-md cursor-pointer group">
+                                        <span class="block text-xs font-bold tracking-widest text-emerald-100">LEVEL 2 - KONTRIBUSI INDIVIDU (INDIVIDUAL)</span>
+                                        <span class="text-sm font-semibold text-slate-100 italic">Q3 s/d Q6: "Apa yang saya berikan?"</span>
+                                    </div>
+                                    <!-- Level 1 Basic Needs -->
+                                    <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 transition p-4 text-center text-white rounded-xl shadow-md cursor-pointer group">
+                                        <span class="block text-xs font-bold tracking-widest text-emerald-50">LEVEL 1 - KEBUTUHAN DASAR (BASIC NEEDS)</span>
+                                        <span class="text-sm font-semibold text-slate-50 italic">Q1 &amp; Q2: "Apa yang saya dapat?"</span>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-500 leading-relaxed text-center italic mt-2">
+                                    *Sama seperti Hierarki Kebutuhan Maslow, kebutuhan dasar (Level 1) harus terpenuhi terlebih dahulu sebelum melangkah ke tingkat berikutnya.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- TAB 2: KUESIONER GALLUP Q12 -->
+                    <section id="tab-q12" class="tab-pane hidden space-y-8">
+                        <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 print-card-avoid">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                                <div>
+                                    <h3 class="text-xl font-bold text-slate-800">Pengisian Kuesioner Gallup Q12</h3>
+                                    <p class="text-slate-500 text-xs">Evaluasi standar 12 pertanyaan utama untuk mengukur tingkat keterikatan karyawan.</p>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <button onclick="fillMockSurvey('q12')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 border border-slate-200 print-hidden">
+                                        <i data-lucide="wand-2" class="w-4 h-4"></i> Isi Acak Contoh
+                                    </button>
+                                    <button onclick="clearSurveyForm('q12')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 border border-rose-200 print-hidden">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Isian
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Petunjuk Pengisian -->
+                            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 space-y-3">
+                                <h4 class="font-bold text-emerald-950 text-sm flex items-center gap-2">
+                                    <i data-lucide="info" class="w-4.5 h-4.5 text-emerald-700"></i> Petunjuk Pengisian Kuesioner:
+                                </h4>
+                                <p class="text-xs text-emerald-800 leading-relaxed">
+                                    Silakan baca setiap pernyataan dengan saksama dan berikan jawaban yang paling menggambarkan kondisi kerja Anda saat ini. Berikan jawaban yang jujur dan objektif guna mendukung pemetaan kualitas lingkungan kerja secara akurat. Penilaian menggunakan skala 1 sampai 5:
+                                </p>
+                                <div class="grid grid-cols-5 gap-2 text-center text-[10px] font-bold text-emerald-900">
+                                    <div class="bg-white p-2.5 rounded-lg border border-emerald-200/60 shadow-sm">1 = Sangat Tidak Setuju (STS)</div>
+                                    <div class="bg-white p-2.5 rounded-lg border border-emerald-200/60 shadow-sm">2 = Tidak Setuju (TS)</div>
+                                    <div class="bg-white p-2.5 rounded-lg border border-emerald-200/60 shadow-sm">3 = Cukup Setuju (CS)</div>
+                                    <div class="bg-white p-2.5 rounded-lg border border-emerald-200/60 shadow-sm">4 = Setuju (S)</div>
+                                    <div class="bg-white p-2.5 rounded-lg border border-emerald-200/60 shadow-sm">5 = Sangat Setuju (SS)</div>
+                                </div>
+                                <p class="text-[10px] text-emerald-700 italic leading-relaxed">
+                                    * Catatan: Mohon pastikan seluruh data identitas di bawah ini diisi dengan lengkap dan seluruh 12 butir pernyataan terjawab sebelum menekan tombol "Simpan Hasil Survei".
+                                </p>
+                            </div>
+
+                            <!-- Metadata Responden -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-200/80">
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-600 block">Nama Responden <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="resp-name-q12" placeholder="Nama lengkap karyawan" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-600 block">Divisi / Pemasaran <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="resp-dept-q12" placeholder="Misal: Divisi Pemasaran" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-600 block">Jabatan / Role</label>
+                                    <input type="text" id="resp-role-q12" placeholder="Staf, Kepala Divisi, dsb." class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Kuesioner Q12 -->
+                        <div class="space-y-6 pt-4" id="q12-questions-container">
+                            <!-- Questions will be injected dynamically here via JS -->
+                        </div>
+
+                        <!-- Bottom Action Bar & Live Analysis -->
+                        <div class="border-t border-slate-200 pt-6 flex flex-col lg:flex-row gap-6 items-center justify-between print-card-avoid">
+                            <!-- Live Result Preview -->
+                            <div class="w-full lg:w-auto bg-slate-900 text-slate-100 p-6 rounded-2xl flex flex-wrap items-center gap-6 justify-around min-w-[320px]">
+                                <div class="text-center">
+                                    <span class="block text-3xl font-extrabold text-emerald-400" id="live-total-q12">0</span>
+                                    <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total Skor</span>
+                                </div>
+                                <div class="h-8 w-px bg-slate-800"></div>
+                                <div class="text-center">
+                                    <span class="block text-3xl font-extrabold text-white" id="live-mean-q12">0.00</span>
+                                    <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Grand Mean</span>
+                                </div>
+                                <div class="h-8 w-px bg-slate-800"></div>
+                                <div class="text-center">
+                                    <span class="block text-sm font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full uppercase" id="live-status-q12">SEDANG PENGISIAN</span>
+                                    <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider block mt-1">Status Keterlekatan</span>
+                                </div>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="flex items-center gap-3 w-full lg:w-auto justify-end print-hidden">
+                                <button onclick="saveRespondentSurvey('q12')" class="w-full lg:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-4 rounded-2xl shadow-xl shadow-emerald-600/15 transition flex items-center justify-center gap-2">
+                                    <i data-lucide="save" class="w-5 h-5"></i> Simpan Hasil Survei
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Live Dimension Chart Preview -->
+                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 print-card-avoid">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-bold text-slate-700 text-sm">Pratinjau Grafik Rata-Rata Per-Dimensi (Live)</h4>
+                                <span class="text-xs text-slate-500">Menyesuaikan dengan pilihan skor di atas</span>
+                            </div>
+                            <div class="h-64 relative">
+                                <canvas id="q12-live-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Saved Respondents Table -->
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 print-card-avoid">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">Daftar Hasil Survey Q12 Tersimpan</h4>
+                                    <p class="text-slate-500 text-xs">Menyimpan data sesi aktif responden Divisi Pemasaran / Umum.</p>
+                                </div>
+                                <span class="text-xs bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-full border border-indigo-200" id="saved-count-q12">0 Data</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                                            <th class="p-4">Nama Responden</th>
+                                            <th class="p-4">Divisi / Pemasaran</th>
+                                            <th class="p-4">Skor Total</th>
+                                            <th class="p-4">Grand Mean</th>
+                                            <th class="p-4">Hasil Keterlekatan</th>
+                                            <th class="p-4 text-center print-hidden">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="saved-table-q12" class="divide-y divide-slate-100">
+                                        <!-- Dynamically populated -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- TAB 3: KUESIONER GALLUP Q12+ -->
+                    <section id="tab-q12-plus" class="tab-pane hidden space-y-8">
+                        <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 print-card-avoid">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                                <div>
+                                    <h3 class="text-xl font-bold text-slate-800">Pengisian Kuesioner Gallup Q12+</h3>
+                                    <p class="text-slate-500 text-xs">Mengintegrasikan standar Q12 dengan 4 pertanyaan modern (*Respect, Wellbeing, Feedback, Brand Integrity*).</p>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-3 print-hidden">
+                                    <button onclick="fillMockSurvey('q12Plus')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 border border-slate-200">
+                                        <i data-lucide="wand-2" class="w-4 h-4"></i> Isi Acak Contoh
+                                    </button>
+                                    <button onclick="clearSurveyForm('q12Plus')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 border border-rose-200">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Isian
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Petunjuk Pengisian -->
+                            <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 space-y-3">
+                                <h4 class="font-bold text-indigo-950 text-sm flex items-center gap-2">
+                                    <i data-lucide="info" class="w-4.5 h-4.5 text-indigo-700"></i> Petunjuk Pengisian Kuesioner Q12+:
+                                </h4>
+                                <p class="text-xs text-indigo-800 leading-relaxed">
+                                    Kuesioner Gallup Q12+ menggabungkan 12 pertanyaan inti (Level 1 s.d. Level 4) dengan 4 pertanyaan penunjang era modern (Modern Needs) mengenai rasa hormat di tempat kerja, kepedulian terhadap kesehatan mental/fisik (*wellbeing*), pemberian umpan balik (*feedback*) berkala, dan integritas janji eksternal organisasi. Berikan penilaian berdasarkan skala evaluasi berikut:
+                                </p>
+                                <div class="grid grid-cols-5 gap-2 text-center text-[10px] font-bold text-indigo-900">
+                                    <div class="bg-white p-2.5 rounded-lg border border-indigo-200/60 shadow-sm">1 = Sangat Tidak Setuju (STS)</div>
+                                    <div class="bg-white p-2.5 rounded-lg border border-indigo-200/60 shadow-sm">2 = Tidak Setuju (TS)</div>
+                                    <div class="bg-white p-2.5 rounded-lg border border-indigo-200/60 shadow-sm">3 = Cukup Setuju (CS)</div>
+                                    <div class="bg-white p-2.5 rounded-lg border border-indigo-200/60 shadow-sm">4 = Setuju (S)</div>
+                                    <div class="bg-white p-2.5 rounded-lg border border-indigo-200/60 shadow-sm">5 = Sangat Setuju (SS)</div>
+                                </div>
+                                <p class="text-[10px] text-indigo-700 italic leading-relaxed">
+                                    * Catatan: Mohon pastikan seluruh data identitas di bawah ini diisi dengan lengkap dan seluruh 16 butir pernyataan (12 Inti + 4 Modern) terjawab sebelum menekan tombol "Simpan Hasil Q12+".
+                                </p>
+                            </div>
+
+                            <!-- Metadata Responden -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-200/80">
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-600 block">Nama Responden <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="resp-name-q12plus" placeholder="Nama lengkap karyawan" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-600 block">Divisi / Departemen <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="resp-dept-q12plus" placeholder="Divisi, Bidang, atau Unit Kerja" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-600 block">Jabatan / Level</label>
+                                    <input type="text" id="resp-role-q12plus" placeholder="Manager, Supervisor, dsb." class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Kuesioner Q12+ (16 Pertanyaan) -->
+                        <div class="space-y-6 pt-4" id="q12plus-questions-container">
+                            <!-- Questions injected dynamically here -->
+                        </div>
+
+                        <!-- Bottom Action Bar & Live Analysis -->
+                        <div class="border-t border-slate-200 pt-6 flex flex-col lg:flex-row gap-6 items-center justify-between print-card-avoid">
+                            <!-- Live Result Preview -->
+                            <div class="w-full lg:w-auto bg-slate-900 text-slate-100 p-6 rounded-2xl flex flex-wrap items-center gap-6 justify-around min-w-[320px]">
+                                <div class="text-center">
+                                    <span class="block text-3xl font-extrabold text-emerald-400" id="live-total-q12plus">0</span>
+                                    <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total Skor (Max 80)</span>
+                                </div>
+                                <div class="h-8 w-px bg-slate-800"></div>
+                                <div class="text-center">
+                                    <span class="block text-3xl font-extrabold text-white" id="live-mean-q12plus">0.00</span>
+                                    <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Grand Mean</span>
+                                </div>
+                                <div class="h-8 w-px bg-slate-800"></div>
+                                <div class="text-center">
+                                    <span class="block text-sm font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full uppercase" id="live-status-q12plus">SEDANG PENGISIAN</span>
+                                    <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider block mt-1">Status Keterlekatan</span>
+                                </div>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="flex items-center gap-3 w-full lg:w-auto justify-end print-hidden">
+                                <button onclick="saveRespondentSurvey('q12Plus')" class="w-full lg:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-4 rounded-2xl shadow-xl shadow-emerald-600/15 transition flex items-center justify-center gap-2">
+                                    <i data-lucide="save" class="w-5 h-5"></i> Simpan Hasil Q12+
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Live Dimension Chart Preview -->
+                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 print-card-avoid">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-bold text-slate-700 text-sm">Pratinjau Grafik Rata-Rata Per-Dimensi (Live - 5 Dimensi)</h4>
+                                <span class="text-xs text-slate-500">Ditambahkan dimensi Kebutuhan Karyawan Modern</span>
+                            </div>
+                            <div class="h-64 relative">
+                                <canvas id="q12plus-live-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Saved Respondents Table -->
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 print-card-avoid">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">Daftar Hasil Survey Q12+ Tersimpan</h4>
+                                    <p class="text-slate-500 text-xs">Menyimpan data evaluasi komprehensif 16 pertanyaan.</p>
+                                </div>
+                                <span class="text-xs bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-full border border-indigo-200" id="saved-count-q12plus">0 Data</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                                            <th class="p-4">Nama Responden</th>
+                                            <th class="p-4">Departemen</th>
+                                            <th class="p-4">Skor Total</th>
+                                            <th class="p-4">Grand Mean</th>
+                                            <th class="p-4">Hasil Keterlekatan</th>
+                                            <th class="p-4 text-center print-hidden">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="saved-table-q12plus" class="divide-y divide-slate-100">
+                                        <!-- Dynamically populated -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- TAB 4: ANALISIS TOP BOX & SECOND BOX -->
+                    <section id="tab-box-analysis" class="tab-pane hidden space-y-8">
+                        <!-- Top Header Options -->
+                        <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 print-card-avoid">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                                <div>
+                                    <h3 class="text-xl font-bold text-slate-800">Analisis Top Box &amp; Second Box Scoring</h3>
+                                    <p class="text-slate-500 text-xs">Mengidentifikasi proporsi respon ekstrem tertinggi (Sangat Setuju / 5) dan respon positif (Setuju + Sangat Setuju / 4+5).</p>
+                                </div>
+                                <!-- Controls for Source Data & Method -->
+                                <div class="flex flex-wrap items-center gap-3 print-hidden">
+                                    <select id="box-survey-type" onchange="toggleBoxSurveyType()" class="text-xs bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        <option value="q12">Opsi: Gallup Q12 (12 Item)</option>
+                                        <option value="q12plus">Opsi: Gallup Q12+ (16 Item)</option>
+                                    </select>
+                                    <select id="box-data-source" onchange="toggleBoxDataSource()" class="text-xs bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        <option value="mock">Gunakan Data Tabel Pre-Fill</option>
+                                        <option value="saved">Agregasikan Otomatis Data Tersimpan</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Explanatory Panel -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                        <h4 class="text-sm font-bold text-slate-800">Top-Box Scoring (% Sangat Setuju)</h4>
+                                    </div>
+                                    <p class="text-xs text-slate-500 leading-relaxed">
+                                        Fokus pada persentase jawaban <strong class="text-slate-700">Skor 5 (Sangat Setuju)</strong>. Gallup merekomendasikan target ideal ini karena memiliki hubungan paling kuat dengan profitabilitas dan retensi karyawan. <strong class="text-emerald-600">Skor &ge; 50% diinterpretasikan KUAT</strong>.
+                                    </p>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+                                        <h4 class="text-sm font-bold text-slate-800">Second-Box Scoring (% Setuju &amp; Sangat Setuju)</h4>
+                                    </div>
+                                    <p class="text-xs text-slate-500 leading-relaxed">
+                                        Menghitung persentase kumulatif jawaban <strong class="text-slate-700">Skor 4 + 5</strong>. Memberikan gambaran persetujuan umum karyawan (cukup setuju hingga sangat setuju). Membantu melihat area yang butuh didorong dari setuju ke sangat setuju.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Aggregated / Manual Entry Frequencies Table -->
+                        <div class="space-y-4 print-card-avoid">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-bold text-slate-800 text-sm" id="freq-table-title">Daftar Input Distribusi Frekuensi Respon (Contoh Default 100 Responden)</h4>
+                                <button onclick="resetToSlide38Data()" id="btn-reset-slide" class="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 font-bold px-3 py-1.5 rounded-lg hover:bg-slate-200 transition print-hidden">Reset ke Data Default</button>
+                            </div>
+                            <div class="overflow-x-auto rounded-2xl border border-slate-200">
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                                            <th class="p-3 w-10">No</th>
+                                            <th class="p-3 min-w-[250px]">Item Pernyataan</th>
+                                            <th class="p-3 text-center">STS (1)</th>
+                                            <th class="p-3 text-center">TS (2)</th>
+                                            <th class="p-3 text-center">CS (3)</th>
+                                            <th class="p-3 text-center">S (4)</th>
+                                            <th class="p-3 text-center">SS (5)</th>
+                                            <th class="p-3 text-center bg-slate-100/50">Total</th>
+                                            <th class="p-3 text-center bg-emerald-50 text-emerald-800 font-bold">Top Box %</th>
+                                            <th class="p-3 text-center bg-indigo-50 text-indigo-800 font-bold">2nd Box %</th>
+                                            <th class="p-3 text-center">Prioritas Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="freq-table-body" class="divide-y divide-slate-100">
+                                        <!-- Populated dynamically via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Action Panel -->
+                        <div class="border-t border-slate-200 pt-5 flex items-center justify-between flex-wrap gap-4 print-hidden">
+                            <p class="text-xs text-slate-500 italic">
+                                *Setiap perubahan nilai tabel di atas akan meng-update persentase Top Box dan Second Box secara real-time.
+                            </p>
+                            <button onclick="saveBoxAnalysis()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-6 py-3.5 rounded-xl shadow-lg shadow-indigo-600/10 transition flex items-center gap-1.5">
+                                <i data-lucide="save" class="w-4 h-4"></i> Simpan Snapshot Analisis Box
+                            </button>
+                        </div>
+
+                        <!-- Saved Box Snapshots -->
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 print-card-avoid">
+                            <div>
+                                <h4 class="font-bold text-slate-800">Snapshot Analisis Box Tersimpan</h4>
+                                <p class="text-slate-500 text-xs">Rekaman riwayat analisis Top/Second Box untuk pelaporan berkala.</p>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                                            <th class="p-4">Tanggal Analisis</th>
+                                            <th class="p-4">Jenis Survei</th>
+                                            <th class="p-4">Sumber Data</th>
+                                            <th class="p-4">Rata-rata Top Box</th>
+                                            <th class="p-4">Rata-rata Second Box</th>
+                                            <th class="p-4 text-center print-hidden">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="saved-box-snapshots" class="divide-y divide-slate-100">
+                                        <tr class="text-slate-400 italic text-center">
+                                            <td colspan="6" class="p-6">Belum ada snapshot tersimpan. Klik "Simpan Snapshot" di atas.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- TAB 5: LAPORAN EKSEKUTIF -->
+                    <section id="tab-report" class="tab-pane hidden space-y-8">
+                        <!-- Select Report Type Header -->
+                        <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 print-card-avoid">
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-900 tracking-tight">Executive Report &amp; Analytics</h3>
+                                <p class="text-slate-500 text-xs">Pilih format laporan khusus berdasarkan Q12 Standar atau Q12+ Modern.</p>
+                            </div>
+                            <div class="flex items-center gap-3 print-hidden">
+                                <span class="text-xs font-bold text-slate-600">Pilih Opsi Laporan:</span>
+                                <div class="bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 flex items-center gap-1.5">
+                                    <button onclick="switchReportFormat('q12')" id="btn-rep-q12" class="text-xs font-bold px-4 py-2.5 rounded-xl transition bg-emerald-600 text-white shadow">
+                                        Gallup Q12
+                                    </button>
+                                    <button onclick="switchReportFormat('q12plus')" id="btn-rep-q12plus" class="text-xs font-bold px-4 py-2.5 rounded-xl transition text-slate-600 hover:text-slate-900">
+                                        Gallup Q12+
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Print Style Exec Report Card Wrapper -->
+                        <div class="bg-white p-8 md:p-12 rounded-3xl border border-slate-200 shadow-md space-y-12" id="printable-report-area">
+                            <!-- Report Header -->
+                            <div class="border-b border-slate-200 pb-8 flex flex-col md:flex-row items-start justify-between gap-6 print-card-avoid">
+                                <div class="space-y-2">
+                                    <span class="text-[10px] uppercase font-bold tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">Hasil Analisis Keterlekatan Pekerja</span>
+                                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight" id="report-title-header">LAPORAN INTEGRAL GALLUP Q12</h2>
+                                    <p class="text-xs text-slate-500">Dibuat Berdasarkan Sesi Aktif Kuesioner &amp; Pemetaan Demografis Organisasi.</p>
+                                </div>
+                                <div class="text-left md:text-right text-xs text-slate-500 space-y-1">
+                                    <p class="font-semibold text-slate-800">Laporan Hasil Evaluasi</p>
+                                    <p class="text-emerald-600 font-bold uppercase tracking-wider text-[10px]">Sesi Aktif Responden</p>
+                                    <p>Asesor / Konsultan: Iman N Bajuasijadji</p>
+                                </div>
+                            </div>
+
+                            <!-- Executive Summary Cards -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 print-card-avoid">
+                                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center">
+                                    <span class="block text-4xl font-extrabold text-slate-900" id="rep-card-total">0</span>
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Responden</span>
+                                </div>
+                                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center">
+                                    <span class="block text-4xl font-extrabold text-indigo-700" id="rep-card-grandmean">0.00</span>
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Overall Grand Mean</span>
+                                </div>
+                                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center">
+                                    <span class="block text-4xl font-extrabold text-emerald-600" id="rep-card-engaged">0%</span>
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Engaged Ratio</span>
+                                </div>
+                                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center">
+                                    <span class="block text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1.5 rounded-full inline-block uppercase tracking-wider" id="rep-card-status">SEDANG</span>
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mt-2.5">Engagement Level</span>
+                                </div>
+                            </div>
+
+                            <!-- Analytical Charts Layout -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- Chart 1: Proportions -->
+                                <div class="p-6 bg-slate-50/50 rounded-2xl border border-slate-200/80 space-y-4 print-card-avoid">
+                                    <h4 class="font-bold text-slate-800 text-sm text-center">Proporsi Status Keterlekatan Karyawan</h4>
+                                    <div class="h-64 relative w-full">
+                                        <canvas id="rep-chart-proportion"></canvas>
+                                    </div>
+                                    <div class="flex items-center justify-around text-xs font-semibold pt-2 text-slate-600">
+                                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span>Engaged</span>
+                                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-slate-400"></span>Not Engaged</span>
+                                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span>Disengaged</span>
+                                    </div>
+                                </div>
+
+                                <!-- Chart 2: Dimension Grand Means -->
+                                <div class="p-6 bg-slate-50/50 rounded-2xl border border-slate-200/80 space-y-4 print-card-avoid">
+                                    <h4 class="font-bold text-slate-800 text-sm text-center">Skor Rata-Rata Per Dimensi Hierarki</h4>
+                                    <div class="h-64 relative w-full">
+                                        <canvas id="rep-chart-dimensions"></canvas>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 leading-relaxed text-center">
+                                        Dimensi diukur dari Skala Likert 1-5. Rekomendasi tindakan prioritas disesuaikan pada dimensi bernilai rendah.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Strengths and Prioritized Improvements -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                                <!-- Strengths Card -->
+                                <div class="bg-emerald-50/30 p-6 rounded-2xl border border-emerald-200/80 space-y-4 print-card-avoid">
+                                    <div class="flex items-center gap-2 text-emerald-800">
+                                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+                                        <h4 class="font-bold">Kekuatan Utama Budaya Keterlekatan</h4>
+                                    </div>
+                                    <ul class="space-y-3.5 text-xs text-slate-600" id="rep-strengths-list">
+                                        <!-- Dynamically populated -->
+                                    </ul>
+                                </div>
+
+                                <!-- Priorities Card -->
+                                <div class="bg-rose-50/30 p-6 rounded-2xl border border-rose-200/80 space-y-4 print-card-avoid">
+                                    <div class="flex items-center gap-2 text-rose-800">
+                                        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600"></i>
+                                        <h4 class="font-bold">Prioritas Tindakan Perbaikan (Urgen)</h4>
+                                    </div>
+                                    <ul class="space-y-3.5 text-xs text-slate-600" id="rep-priorities-list">
+                                        <!-- Dynamically populated -->
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Executive Action Recommendations -->
+                            <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 print-card-avoid">
+                                <div class="flex items-center gap-2 text-slate-800 border-b border-slate-200 pb-3">
+                                    <i data-lucide="award" class="w-5 h-5 text-indigo-600"></i>
+                                    <h4 class="font-bold">Rekomendasi Intervensi HR</h4>
+                                </div>
+                                <div class="space-y-4 text-xs text-slate-600 leading-relaxed" id="rep-recommendations-text">
+                                    <!-- Injected dynamically based on calculations -->
+                                </div>
+                            </div>
+
+                            <!-- Signatures / Report Footer for PDF Print -->
+                            <div class="border-t border-slate-200 pt-8 flex items-center justify-between flex-wrap gap-6 text-xs text-slate-500 print-card-avoid">
+                                <div>
+                                    <p>Tanggal Cetak: <span id="current-date-field">Juni 2026</span></p>
+                                    <p class="text-[10px]">ID Laporan: EE-REP-025-2026</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-slate-800">Asesor / Konsultan Utama</p>
+                                    <p class="text-[10px]">Iman N Bajuasijadji</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Export & Print Actions -->
+                        <div class="flex items-center justify-end gap-3 pt-4 print-hidden">
+                            <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-6 py-3.5 rounded-xl transition flex items-center gap-1.5 shadow">
+                                <i data-lucide="printer" class="w-4 h-4"></i> Cetak / Simpan PDF Laporan
+                            </button>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts & Logic -->
+    <script>
+        // --- AUTHENTICATION LOGIC ---
+        let isAuthenticated = false;
+        
+        function checkAuthStatus() {
+            const storedAuth = sessionStorage.getItem('q12_auth_status');
+            if (storedAuth === 'true') {
+                isAuthenticated = true;
+                unlockApplication();
+            } else {
+                lockApplication();
+            }
+        }
+
+        function attemptLogin() {
+            const passwordInput = document.getElementById('auth-password').value.trim().toLowerCase();
+            const currentYear = new Date().getFullYear();
+            const expectedPassword = `q12-${currentYear}`;
+            const errorElement = document.getElementById('auth-error');
+
+            if (passwordInput === expectedPassword) {
+                isAuthenticated = true;
+                sessionStorage.setItem('q12_auth_status', 'true');
+                errorElement.classList.add('hidden');
+                document.getElementById('auth-password').value = '';
+                unlockApplication();
+                triggerToast("Otorisasi berhasil. Selamat datang!");
+            } else {
+                errorElement.classList.remove('hidden');
+                document.getElementById('auth-password').value = '';
+                const authBox = document.querySelector('#auth-overlay .bg-white');
+                authBox.classList.add('animate-bounce');
+                setTimeout(() => authBox.classList.remove('animate-bounce'), 500);
+            }
+        }
+
+        function handleAuthKeyPress(e) {
+            if (e.key === 'Enter') {
+                attemptLogin();
+            }
+        }
+
+        function unlockApplication() {
+            const overlay = document.getElementById('auth-overlay');
+            const mainApp = document.getElementById('main-app-container');
+            
+            overlay.classList.add('hidden-overlay');
+            mainApp.classList.remove('blurred-out');
+        }
+
+        function lockApplication() {
+            isAuthenticated = false;
+            sessionStorage.removeItem('q12_auth_status');
+            
+            const overlay = document.getElementById('auth-overlay');
+            const mainApp = document.getElementById('main-app-container');
+            
+            overlay.classList.remove('hidden-overlay');
+            mainApp.classList.add('blurred-out');
+        }
+
+        // Security: Lock app when user switches tabs or leaves window
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && isAuthenticated) {
+                lockApplication();
+            }
+        });
+
+
+        // --- MAIN APP LOGIC ---
+        // Global Datasets
+        const q12Questions = [
+            { id: 1, eng: "I know what is expected of me at work.", idn: "Saya tahu apa yang diharapkan dari saya di tempat kerja.", dim: "Basic Needs" },
+            { id: 2, eng: "I have the materials and equipment I need to do my work right.", idn: "Saya memiliki material dan peralatan yang saya butuhkan untuk melakukan pekerjaan saya dengan benar.", dim: "Basic Needs" },
+            { id: 3, eng: "At work, I have the opportunity to do what I do best every day.", idn: "Di tempat kerja, saya memiliki kesempatan setiap hari untuk melakukan hal yang paling saya kuasai.", dim: "Individual Contribution" },
+            { id: 4, eng: "In the last seven days, I have received recognition or praise for doing good work.", idn: "Dalam tujuh hari terakhir, saya menerima pengakuan atau pujian atas pekerjaan baik yang saya lakukan.", dim: "Individual Contribution" },
+            { id: 5, eng: "My supervisor, or someone at work, seems to care about me as a person.", idn: "Atasan saya, atau seseorang di tempat kerja, tampak peduli pada saya sebagai pribadi.", dim: "Individual Contribution" },
+            { id: 6, eng: "There is someone at work who encourages my development.", idn: "Ada seseorang di tempat kerja yang mendorong perkembangan saya.", dim: "Individual Contribution" },
+            { id: 7, eng: "At work, my opinions seem to count.", idn: "Di tempat kerja, pendapat saya tampaknya diperhitungkan.", dim: "Teamwork" },
+            { id: 8, eng: "The mission or purpose of my company makes me feel my job is important.", idn: "Misi atau tujuan perusahaan saya membuat saya merasa pekerjaan saya penting.", dim: "Teamwork" },
+            { id: 9, eng: "My associates or fellow employees are committed to doing quality work.", idn: "Rekan kerja saya berkomitmen untuk menghasilkan pekerjaan berkualitas.", dim: "Teamwork" },
+            { id: 10, eng: "I have a best friend at work.", idn: "Saya memiliki sahabat terbaik di tempat kerja.", dim: "Teamwork" },
+            { id: 11, eng: "In the last six months, someone at work has talked to me about my progress.", idn: "Dalam enam bulan terakhir, seseorang di tempat kerja berbicara dengan saya tentang kemajuan saya.", dim: "Growth" },
+            { id: 12, eng: "This last year, I have had opportunities at work to learn and grow.", idn: "Dalam setahun terakhir, saya memiliki kesempatan di tempat kerja untuk belajar dan bertumbuh.", dim: "Growth" }
+        ];
+
+        const q12PlusQuestions = [
+            ...q12Questions,
+            { id: 13, eng: "At work, I am treated with respect.", idn: "Di tempat kerja, saya diperlakukan dengan hormat.", dim: "Modern Needs" },
+            { id: 14, eng: "My organization cares about my overall wellbeing.", idn: "Organisasi saya peduli terhadap kesejahteraan saya secara keseluruhan.", dim: "Modern Needs" },
+            { id: 15, eng: "In the last week, I have received meaningful feedback.", idn: "Dalam minggu terakhir, saya menerima umpan balik yang bermakna.", dim: "Modern Needs" },
+            { id: 16, eng: "My organization always keeps the promises we make to our customers.", idn: "Organisasi saya selalu menepati janji yang kami buat kepada pelanggan.", dim: "Modern Needs" }
+        ];
+
+        // Default dataset for top/second box
+        const slide38MockData = [
+            { id: 1, question: "Saya tahu apa yang diharapkan dari saya", sts: 5, ts: 10, cs: 15, s: 40, ss: 30 },
+            { id: 2, question: "Saya memiliki bahan dan peralatan kerja memadai", sts: 7, ts: 10, cs: 13, s: 35, ss: 35 },
+            { id: 3, question: "Saya punya kesempatan melakukan yang terbaik setiap hari", sts: 8, ts: 12, cs: 20, s: 30, ss: 30 },
+            { id: 4, question: "Saya mendapat pengakuan/penghargaan 7 hari terakhir", sts: 20, ts: 25, cs: 15, s: 25, ss: 15 },
+            { id: 5, question: "Atasan saya peduli terhadap saya sebagai pribadi", sts: 5, ts: 8, cs: 12, s: 30, ss: 45 },
+            { id: 6, question: "Ada yang mendorong perkembangan saya", sts: 10, ts: 12, cs: 18, s: 40, ss: 20 },
+            { id: 7, question: "Pendapat saya diperhitungkan di tempat kerja", sts: 12, ts: 15, cs: 20, s: 33, ss: 20 },
+            { id: 8, question: "Misi/tujuan organisasi membuat pekerjaan saya penting", sts: 5, ts: 8, cs: 12, s: 35, ss: 40 },
+            { id: 9, question: "Rekan kerja saya berkomitmen menghasilkan kualitas", sts: 3, ts: 5, cs: 7, s: 30, ss: 55 },
+            { id: 10, question: "Saya memiliki sahabat terbaik di tempat kerja", sts: 20, ts: 18, cs: 15, s: 27, ss: 20 },
+            { id: 11, question: "Dalam 6 bulan terakhir ada yang membicarakan perkembangan saya", sts: 18, ts: 20, cs: 17, s: 25, ss: 20 },
+            { id: 12, question: "Tahun lalu saya punya peluang belajar & berkembang", sts: 10, ts: 10, cs: 15, s: 35, ss: 30 }
+        ];
+
+        // Extra 4 items for Q12+ box mock data
+        const slide38MockDataPlus = [
+            ...slide38MockData,
+            { id: 13, question: "Di tempat kerja, saya diperlakukan dengan hormat", sts: 4, ts: 6, cs: 10, s: 45, ss: 35 },
+            { id: 14, question: "Organisasi saya peduli kesejahteraan saya keseluruhan", sts: 6, ts: 9, cs: 15, s: 30, ss: 40 },
+            { id: 15, question: "Dalam seminggu terakhir saya menerima umpan balik bermakna", sts: 12, ts: 18, cs: 20, s: 25, ss: 25 },
+            { id: 16, question: "Organisasi saya selalu menepati janji pada pelanggan", sts: 3, ts: 5, cs: 12, s: 35, ss: 45 }
+        ];
+
+        // State Management
+        let appState = {
+            q12Respondents: [],
+            q12PlusRespondents: [],
+            manualFreqQ12: JSON.parse(JSON.stringify(slide38MockData)),
+            manualFreqQ12Plus: JSON.parse(JSON.stringify(slide38MockDataPlus)),
+            savedBoxSnapshots: [],
+            currentReportFormat: 'q12' // or 'q12plus'
+        };
+
+        // Charts Global Variables
+        let liveQ12ChartObj = null;
+        let liveQ12PlusChartObj = null;
+        let repProportionChartObj = null;
+        let repDimensionsChartObj = null;
+
+        // Initialize App on Window Load
+        window.onload = function() {
+            lucide.createIcons();
+            
+            // Check auth status right away
+            checkAuthStatus();
+            
+            // Seed 10 mock respondents based on Sejahtera Bersama case study
+            seedCaseStudyData();
+
+            // Render Questions Forms
+            renderSurveyQuestions('q12');
+            renderSurveyQuestions('q12Plus');
+
+            // Render Saved Respondents Tables
+            renderSavedTable('q12');
+            renderSavedTable('q12Plus');
+
+            // Set default view on Halaman 4 Box Analysis
+            renderFreqTable();
+
+            // Set Date Field in Report
+            const dateObj = new Date();
+            const dateStr = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('current-date-field').innerText = dateStr;
+
+            // Setup Mobile Menu Nav
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const sidebarNav = document.getElementById('sidebar-nav');
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebarNav.classList.toggle('hidden');
+            });
+        };
+
+        // Switch Tabs Functionality
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+
+            // Handle Nav active state class
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-emerald-600', 'text-white', 'shadow-lg');
+                btn.classList.add('text-slate-400');
+            });
+
+            const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'bg-emerald-600', 'text-white', 'shadow-lg');
+                activeBtn.classList.remove('text-slate-400');
+            }
+
+            // Close mobile menu if open
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar-nav').classList.add('hidden');
+            }
+
+            // Page specific chart trigger/refresh
+            if (tabId === 'tab-q12') {
+                updateLiveChart('q12');
+            } else if (tabId === 'tab-q12-plus') {
+                updateLiveChart('q12Plus');
+            } else if (tabId === 'tab-report') {
+                renderExecutiveReport();
+            } else if (tabId === 'tab-box-analysis') {
+                renderFreqTable();
+            }
+        }
+
+        // Custom Toast Notification trigger
+        function triggerToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = message;
+            
+            if (isSuccess) {
+                toast.classList.remove('bg-rose-600');
+                toast.classList.add('bg-emerald-600');
+            } else {
+                toast.classList.remove('bg-emerald-600');
+                toast.classList.add('bg-rose-600');
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-[-100px]');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-100px]');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 3000);
+        }
+
+        // Seed case study database dynamically with realistic survey profiles
+        function seedCaseStudyData() {
+            const targetScoresQ12 = [52, 46, 39, 34, 55, 49, 41, 37, 44, 32];
+            const names = ["Andi Ramadhan", "Budi Santoso", "Citra Lestari", "Dian Sastro", "Eko Wahyudi", "Fajar Nugraha", "Gita Gutawa", "Hendra Wijaya", "Indah Permata", "Joko Susilo"];
+            
+            targetScoresQ12.forEach((target, index) => {
+                let scores = Array(12).fill(3); // base 3
+                let sum = 36;
+                let attempts = 0;
+                while (sum !== target && attempts < 1000) {
+                    const randIdx = Math.floor(Math.random() * 12);
+                    const diff = target > sum ? 1 : -1;
+                    if (scores[randIdx] + diff >= 1 && scores[randIdx] + diff <= 5) {
+                        scores[randIdx] += diff;
+                        sum += diff;
+                    }
+                    attempts++;
+                }
+
+                appState.q12Respondents.push({
+                    name: names[index],
+                    division: "Pemasaran",
+                    role: "Staf Pemasaran",
+                    scores: scores,
+                    total: target,
+                    mean: parseFloat((target / 12).toFixed(2)),
+                    status: getEngagementStatus(target / 12, scores)
+                });
+
+                let scoresPlus = [...scores, 4, 3, 4, 4]; // Add 4 realistic scores for extra questions
+                const targetPlus = scoresPlus.reduce((a, b) => a + b, 0);
+                appState.q12PlusRespondents.push({
+                    name: names[index],
+                    division: "Pemasaran",
+                    role: "Staf Pemasaran",
+                    scores: scoresPlus,
+                    total: targetPlus,
+                    mean: parseFloat((targetPlus / 16).toFixed(2)),
+                    status: getEngagementStatus(targetPlus / 16, scoresPlus)
+                });
+            });
+        }
+
+        // Programmatic Helper to categorize Engagement
+        function getEngagementStatus(mean, scoresArray) {
+            const lowScoresCount = scoresArray.filter(s => s <= 2).length;
+            if (mean >= 4.00 && lowScoresCount === 0) {
+                return "Engaged";
+            } else if (mean < 3.25 || lowScoresCount >= 4) {
+                return "Actively Disengaged";
+            } else {
+                return "Not Engaged";
+            }
+        }
+
+        // Render kuesioner dynamically inside HTML container
+        function renderSurveyQuestions(type) {
+            const containerId = type === 'q12' ? 'q12-questions-container' : 'q12plus-questions-container';
+            const questions = type === 'q12' ? q12Questions : q12PlusQuestions;
+            const container = document.getElementById(containerId);
+            
+            let html = "";
+            questions.forEach((q, idx) => {
+                const qNum = String(q.id).padStart(2, '0');
+                html += `
+                <div class="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:border-slate-300 transition duration-150 space-y-4 print-card-avoid">
+                    <div class="flex items-start gap-4">
+                        <span class="bg-slate-100 text-slate-700 font-bold text-xs px-2.5 py-1.5 rounded-lg border border-slate-200">Q${qNum}</span>
+                        <div class="space-y-0.5">
+                            <span class="block text-xs font-bold text-slate-400 tracking-wider uppercase">${q.dim}</span>
+                            <h4 class="font-semibold text-slate-800 text-sm md:text-base leading-snug">${q.idn}</h4>
+                            <p class="text-xs text-slate-400 italic">${q.eng}</p>
+                        </div>
+                    </div>
+                    <!-- Rating Pill Options -->
+                    <div class="grid grid-cols-5 gap-2 pt-2">
+                        ${[1, 2, 3, 4, 5].map(score => {
+                            let label = "";
+                            let color = "";
+                            switch(score) {
+                                case 1: label = "STS"; color = "peer-checked:bg-rose-600 peer-checked:text-white hover:bg-rose-50"; break;
+                                case 2: label = "TS"; color = "peer-checked:bg-orange-500 peer-checked:text-white hover:bg-orange-50"; break;
+                                case 3: label = "CS"; color = "peer-checked:bg-amber-500 peer-checked:text-white hover:bg-amber-50"; break;
+                                case 4: label = "S"; color = "peer-checked:bg-indigo-600 peer-checked:text-white hover:bg-indigo-50"; break;
+                                case 5: label = "SS"; color = "peer-checked:bg-emerald-600 peer-checked:text-white hover:bg-emerald-50"; break;
+                            }
+                            return `
+                            <label class="cursor-pointer">
+                                <input type="radio" name="${type}-score-${q.id}" value="${score}" onchange="recalculateLiveStats('${type}')" class="sr-only peer">
+                                <div class="p-3 text-center rounded-xl border border-slate-200 text-xs font-bold transition duration-150 text-slate-600 ${color}">
+                                    <span class="block text-sm font-extrabold mb-0.5">${score}</span>
+                                    <span class="block text-[9px] uppercase tracking-wider">${label}</span>
+                                </div>
+                            </label>
+                            `;
+                        }).join("")}
+                    </div>
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Recalculate survey stats in real time based on active selection
+        function recalculateLiveStats(type) {
+            const questions = type === 'q12' ? q12Questions : q12PlusQuestions;
+            let total = 0;
+            let answeredCount = 0;
+            let scoresArray = [];
+
+            questions.forEach(q => {
+                const selected = document.querySelector(`input[name="${type}-score-${q.id}"]:checked`);
+                if (selected) {
+                    const val = parseInt(selected.value);
+                    total += val;
+                    answeredCount++;
+                    scoresArray.push(val);
+                } else {
+                    scoresArray.push(0);
+                }
+            });
+
+            const mean = answeredCount > 0 ? parseFloat((total / answeredCount).toFixed(2)) : 0.00;
+            const status = getEngagementStatus(mean, scoresArray.filter(s => s > 0));
+
+            // Update DOM element live values
+            document.getElementById(`live-total-${type.toLowerCase()}`).innerText = total;
+            document.getElementById(`live-mean-${type.toLowerCase()}`).innerText = mean.toFixed(2);
+            
+            const statusEl = document.getElementById(`live-status-${type.toLowerCase()}`);
+            statusEl.innerText = answeredCount === questions.length ? status.toUpperCase() : "SEDANG PENGISIAN";
+            
+            // Adjust label status colors
+            statusEl.className = "block text-sm font-bold bg-slate-100 border px-3 py-1 rounded-full uppercase inline-block";
+            if (answeredCount === questions.length) {
+                if (status === "Engaged") {
+                    statusEl.classList.add("bg-emerald-500/10", "border-emerald-500/20", "text-emerald-400");
+                } else if (status === "Actively Disengaged") {
+                    statusEl.classList.add("bg-rose-500/10", "border-rose-500/20", "text-rose-400");
+                } else {
+                    statusEl.classList.add("bg-amber-500/10", "border-amber-500/20", "text-amber-400");
+                }
+            } else {
+                statusEl.classList.add("bg-slate-500/10", "border-slate-500/20", "text-slate-400");
+            }
+
+            // Live Update Chart
+            updateLiveChart(type, scoresArray);
+        }
+
+        // Render charts dynamically using Chart.js inside canvas wrappers
+        function updateLiveChart(type, scoresArray = []) {
+            const chartCanvasId = type === 'q12' ? 'q12-live-chart' : 'q12plus-live-chart';
+            const ctx = document.getElementById(chartCanvasId).getContext('2d');
+            
+            // Default arrays if no inputs answered yet
+            if (scoresArray.length === 0) {
+                const totalQs = type === 'q12' ? 12 : 16;
+                scoresArray = Array(totalQs).fill(0);
+            }
+
+            // Group by Dimension
+            const dimensions = type === 'q12' ? 
+                ["Basic Needs", "Individual Contribution", "Teamwork", "Growth"] : 
+                ["Basic Needs", "Individual Contribution", "Teamwork", "Growth", "Modern Needs"];
+            
+            const questions = type === 'q12' ? q12Questions : q12PlusQuestions;
+            
+            const averages = dimensions.map(dim => {
+                const dimScores = [];
+                questions.forEach(q => {
+                    if (q.dim === dim) {
+                        dimScores.push(scoresArray[q.id - 1] || 0);
+                    }
+                });
+                const sum = dimScores.reduce((a, b) => a + b, 0);
+                return dimScores.length > 0 ? parseFloat((sum / dimScores.length).toFixed(2)) : 0;
+            });
+
+            // Destroy previous chart reference if exists
+            let activeChartObj = type === 'q12' ? liveQ12ChartObj : liveQ12PlusChartObj;
+            if (activeChartObj) {
+                activeChartObj.destroy();
+            }
+
+            // Draw Chart
+            const newChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dimensions,
+                    datasets: [{
+                        label: 'Nilai Rata-rata Skor Dimensi',
+                        data: averages,
+                        backgroundColor: type === 'q12' ? 'rgba(16, 185, 129, 0.85)' : 'rgba(79, 70, 229, 0.85)',
+                        borderColor: type === 'q12' ? 'rgb(16, 185, 129)' : 'rgb(79, 70, 229)',
+                        borderWidth: 1.5,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 5,
+                            ticks: { stepSize: 1, color: '#64748b' },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            ticks: { color: '#64748b', font: { size: 11, weight: '500' } },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            if (type === 'q12') {
+                liveQ12ChartObj = newChart;
+            } else {
+                liveQ12PlusChartObj = newChart;
+            }
+        }
+
+        // Fill Random Form items for demo purposes quickly
+        function fillMockSurvey(type) {
+            const questions = type === 'q12' ? q12Questions : q12PlusQuestions;
+            
+            // Populate Name fields
+            const randomNames = ["Aris Budiman", "Rina Marlina", "Taufik Hidayat", "Yuki Kato", "Zaskia Mecca", "Reza Rahadian", "Bunga Citra", "Chelsea Islan"];
+            const selectedName = randomNames[Math.floor(Math.random() * randomNames.length)];
+            
+            if (type === 'q12') {
+                document.getElementById('resp-name-q12').value = selectedName;
+                document.getElementById('resp-dept-q12').value = "Pemasaran";
+                document.getElementById('resp-role-q12').value = "Staf";
+            } else {
+                document.getElementById('resp-name-q12plus').value = selectedName;
+                document.getElementById('resp-dept-q12plus').value = "Departemen Pengembangan Produk";
+                document.getElementById('resp-role-q12plus').value = "Lead Developer";
+            }
+
+            // Fill Radio Pill items randomly but leaning positively (3-5)
+            questions.forEach(q => {
+                const randomScore = Math.floor(Math.random() * 3) + 3; // random between 3, 4, 5
+                const radio = document.querySelector(`input[name="${type}-score-${q.id}"][value="${randomScore}"]`);
+                if (radio) radio.checked = true;
+            });
+
+            recalculateLiveStats(type);
+            triggerToast("Form kuesioner berhasil diisi dengan data acak realistis!");
+        }
+
+        // Clear all kuesioner radio buttons and inputs
+        function clearSurveyForm(type) {
+            const questions = type === 'q12' ? q12Questions : q12PlusQuestions;
+            
+            if (type === 'q12') {
+                document.getElementById('resp-name-q12').value = "";
+                document.getElementById('resp-dept-q12').value = "";
+                document.getElementById('resp-role-q12').value = "";
+            } else {
+                document.getElementById('resp-name-q12plus').value = "";
+                document.getElementById('resp-dept-q12plus').value = "";
+                document.getElementById('resp-role-q12plus').value = "";
+            }
+
+            questions.forEach(q => {
+                document.querySelectorAll(`input[name="${type}-score-${q.id}"]`).forEach(radio => {
+                    radio.checked = false;
+                });
+            });
+
+            recalculateLiveStats(type);
+            triggerToast("Form berhasil dikosongkan.");
+        }
+
+        // Save Form Respondent Entry to State Database
+        function saveRespondentSurvey(type) {
+            const questions = type === 'q12' ? q12Questions : q12PlusQuestions;
+            const nameFieldId = type === 'q12' ? 'resp-name-q12' : 'resp-name-q12plus';
+            const deptFieldId = type === 'q12' ? 'resp-dept-q12' : 'resp-dept-q12plus';
+            const roleFieldId = type === 'q12' ? 'resp-role-q12' : 'resp-role-q12plus';
+
+            const name = document.getElementById(nameFieldId).value.trim();
+            const dept = document.getElementById(deptFieldId).value.trim();
+            const role = document.getElementById(roleFieldId).value.trim();
+
+            if (!name || !dept) {
+                triggerToast("Nama Responden dan Divisi/Departemen wajib diisi!", false);
+                return;
+            }
+
+            // Validate all questions are answered
+            let scoresArray = [];
+            let unselectedCount = 0;
+
+            questions.forEach(q => {
+                const selected = document.querySelector(`input[name="${type}-score-${q.id}"]:checked`);
+                if (selected) {
+                    scoresArray.push(parseInt(selected.value));
+                } else {
+                    unselectedCount++;
+                }
+            });
+
+            if (unselectedCount > 0) {
+                triggerToast(`Harap selesaikan pengisian! Masih ada ${unselectedCount} pertanyaan kosong.`, false);
+                return;
+            }
+
+            const total = scoresArray.reduce((a, b) => a + b, 0);
+            const mean = parseFloat((total / questions.length).toFixed(2));
+            const status = getEngagementStatus(mean, scoresArray);
+
+            const newRespondent = {
+                name,
+                division: dept,
+                role: role || "-",
+                scores: scoresArray,
+                total,
+                mean,
+                status
+            };
+
+            if (type === 'q12') {
+                appState.q12Respondents.unshift(newRespondent);
+                renderSavedTable('q12');
+            } else {
+                appState.q12PlusRespondents.unshift(newRespondent);
+                renderSavedTable('q12Plus');
+            }
+
+            triggerToast(`Hasil kuesioner atas nama ${name} berhasil disimpan!`);
+            
+            // Clear Form for next respondent
+            clearSurveyForm(type);
+        }
+
+        // Render rows of saved responders in Page 2 and Page 3 tables
+        function renderSavedTable(type) {
+            const list = type === 'q12' ? appState.q12Respondents : appState.q12PlusRespondents;
+            const tableBody = document.getElementById(`saved-table-${type.toLowerCase()}`);
+            const countBadge = document.getElementById(`saved-count-${type.toLowerCase()}`);
+
+            countBadge.innerText = `${list.length} Data`;
+
+            if (list.length === 0) {
+                tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-6 text-slate-400 italic text-center">Belum ada data responden tersimpan. Selesaikan kuesioner di atas.</td>
+                </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = list.map((resp, idx) => {
+                let badgeStyle = "";
+                if (resp.status === "Engaged") {
+                    badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                } else if (resp.status === "Actively Disengaged") {
+                    badgeStyle = "bg-rose-50 text-rose-700 border-rose-200";
+                } else {
+                    badgeStyle = "bg-amber-50 text-amber-700 border-amber-200";
+                }
+
+                return `
+                <tr class="hover:bg-slate-50 transition duration-150 border-b border-slate-100 print-card-avoid">
+                    <td class="p-4 font-semibold text-slate-800">${resp.name}</td>
+                    <td class="p-4 text-slate-500 text-xs">${resp.division} <span class="block text-[10px] text-slate-400">${resp.role}</span></td>
+                    <td class="p-4 font-bold text-slate-700">${resp.total}</td>
+                    <td class="p-4 font-bold text-slate-950">${resp.mean.toFixed(2)}</td>
+                    <td class="p-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeStyle}">${resp.status}</span>
+                    </td>
+                    <td class="p-4 text-center print-hidden">
+                        <button onclick="deleteRespondent('${type}', ${idx})" class="p-2 hover:bg-rose-50 rounded-lg text-rose-600 transition" title="Hapus Responden">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+                `;
+            }).join("");
+
+            lucide.createIcons();
+        }
+
+        // Delete respondent entry item
+        function deleteRespondent(type, index) {
+            if (type === 'q12') {
+                appState.q12Respondents.splice(index, 1);
+                renderSavedTable('q12');
+            } else {
+                appState.q12PlusRespondents.splice(index, 1);
+                renderSavedTable('q12Plus');
+            }
+            triggerToast("Responden berhasil dihapus dari daftar.");
+        }
+
+        // Manage Gallup Tab 4 Analysis options & toggles
+        function toggleBoxSurveyType() {
+            renderFreqTable();
+        }
+
+        // Handle Box Data Source Toggle
+        function toggleBoxDataSource() {
+            renderFreqTable();
+        }
+
+        // Render Top Box & Second Box Table on page 4
+        function renderFreqTable() {
+            const surveyType = document.getElementById('box-survey-type').value;
+            const dataSource = document.getElementById('box-data-source').value;
+            const tableBody = document.getElementById('freq-table-body');
+            const tableTitle = document.getElementById('freq-table-title');
+
+            let items = [];
+
+            if (dataSource === 'mock') {
+                tableTitle.innerText = "Daftar Input Distribusi Respon (Data Pre-Fill - Contoh 100 Responden)";
+                items = surveyType === 'q12' ? appState.manualFreqQ12 : appState.manualFreqQ12Plus;
+                document.getElementById('btn-reset-slide').classList.remove('hidden');
+            } else {
+                // aggregate saved data automatically from saved respondents array!
+                tableTitle.innerText = "Data Teragregasi Otomatis dari Hasil Responden Tersimpan";
+                document.getElementById('btn-reset-slide').classList.add('hidden');
+
+                const savedList = surveyType === 'q12' ? appState.q12Respondents : appState.q12PlusRespondents;
+                const questionsList = surveyType === 'q12' ? q12Questions : q12PlusQuestions;
+
+                if (savedList.length === 0) {
+                    tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="p-8 text-center text-slate-500 italic">
+                            Belum ada responden tersimpan untuk survei ${surveyType.toUpperCase()}. Silakan isi dan simpan responden di menu kuesioner atau beralih ke "Data Pre-Fill".
+                        </td>
+                    </tr>
+                    `;
+                    return;
+                }
+
+                // Compile frequencies
+                items = questionsList.map(q => {
+                    let sts = 0, ts = 0, cs = 0, s = 0, ss = 0;
+                    savedList.forEach(resp => {
+                        const score = resp.scores[q.id - 1];
+                        if (score === 1) sts++;
+                        else if (score === 2) ts++;
+                        else if (score === 3) cs++;
+                        else if (score === 4) s++;
+                        else if (score === 5) ss++;
+                    });
+                    return {
+                        id: q.id,
+                        question: q.idn,
+                        sts, ts, cs, s, ss
+                    };
+                });
+            }
+
+            tableBody.innerHTML = items.map((item, idx) => {
+                const total = item.sts + item.ts + item.cs + item.s + item.ss;
+                const topBoxPercent = total > 0 ? parseFloat(((item.ss / total) * 100).toFixed(1)) : 0.0;
+                const secondBoxPercent = total > 0 ? parseFloat((((item.s + item.ss) / total) * 100).toFixed(1)) : 0.0;
+
+                // Priority Action Formula (Interpretations)
+                let actionBadge = "";
+                if (topBoxPercent >= 50) {
+                    actionBadge = `<span class="bg-emerald-50 text-emerald-700 border-emerald-200 px-2 py-1 rounded text-[10px] font-bold border">KEKUATAN</span>`;
+                } else if (topBoxPercent < 50 && secondBoxPercent >= 70) {
+                    actionBadge = `<span class="bg-indigo-50 text-indigo-700 border-indigo-200 px-2 py-1 rounded text-[10px] font-bold border">DORONG KE SS</span>`;
+                } else {
+                    actionBadge = `<span class="bg-rose-50 text-rose-700 border-rose-200 px-2 py-1 rounded text-[10px] font-bold border">PRIORITAS</span>`;
+                }
+
+                const isMock = dataSource === 'mock';
+
+                return `
+                <tr class="hover:bg-slate-50 transition duration-100 print-card-avoid">
+                    <td class="p-3 font-bold text-slate-500">${String(item.id).padStart(2, '0')}</td>
+                    <td class="p-3 font-medium text-slate-800 text-xs">${item.question}</td>
+                    <!-- Editable Freq Inputs only if Using Mock Data -->
+                    <td class="p-3 text-center">
+                        <input type="number" min="0" value="${item.sts}" onchange="updateFreqValue(${idx}, 'sts', this.value)" ${!isMock ? 'readonly disabled' : ''} class="w-12 text-center border border-slate-200 rounded p-1 text-xs focus:ring-1 focus:ring-emerald-500">
+                    </td>
+                    <td class="p-3 text-center">
+                        <input type="number" min="0" value="${item.ts}" onchange="updateFreqValue(${idx}, 'ts', this.value)" ${!isMock ? 'readonly disabled' : ''} class="w-12 text-center border border-slate-200 rounded p-1 text-xs focus:ring-1 focus:ring-emerald-500">
+                    </td>
+                    <td class="p-3 text-center">
+                        <input type="number" min="0" value="${item.cs}" onchange="updateFreqValue(${idx}, 'cs', this.value)" ${!isMock ? 'readonly disabled' : ''} class="w-12 text-center border border-slate-200 rounded p-1 text-xs focus:ring-1 focus:ring-emerald-500">
+                    </td>
+                    <td class="p-3 text-center">
+                        <input type="number" min="0" value="${item.s}" onchange="updateFreqValue(${idx}, 's', this.value)" ${!isMock ? 'readonly disabled' : ''} class="w-12 text-center border border-slate-200 rounded p-1 text-xs focus:ring-1 focus:ring-emerald-500">
+                    </td>
+                    <td class="p-3 text-center">
+                        <input type="number" min="0" value="${item.ss}" onchange="updateFreqValue(${idx}, 'ss', this.value)" ${!isMock ? 'readonly disabled' : ''} class="w-12 text-center border border-slate-200 rounded p-1 text-xs focus:ring-1 focus:ring-emerald-500">
+                    </td>
+                    <td class="p-3 text-center bg-slate-100/50 font-bold text-slate-600">${total}</td>
+                    <td class="p-3 text-center bg-emerald-50 text-emerald-800 font-extrabold">${topBoxPercent}%</td>
+                    <td class="p-3 text-center bg-indigo-50 text-indigo-800 font-extrabold">${secondBoxPercent}%</td>
+                    <td class="p-3 text-center">${actionBadge}</td>
+                </tr>
+                `;
+            }).join("");
+        }
+
+        // Live input listeners for Freq fields in Halaman 4
+        function updateFreqValue(idx, field, val) {
+            const surveyType = document.getElementById('box-survey-type').value;
+            const num = parseInt(val) || 0;
+            
+            if (surveyType === 'q12') {
+                appState.manualFreqQ12[idx][field] = num;
+            } else {
+                appState.manualFreqQ12Plus[idx][field] = num;
+            }
+
+            renderFreqTable();
+        }
+
+        // Reset manual grid back to default preset
+        function resetToSlide38Data() {
+            const surveyType = document.getElementById('box-survey-type').value;
+            if (surveyType === 'q12') {
+                appState.manualFreqQ12 = JSON.parse(JSON.stringify(slide38MockData));
+            } else {
+                appState.manualFreqQ12Plus = JSON.parse(JSON.stringify(slide38MockDataPlus));
+            }
+            renderFreqTable();
+            triggerToast("Data frekuensi di-reset ke template dasar.");
+        }
+
+        // Save box snapshot to list
+        function saveBoxAnalysis() {
+            const surveyType = document.getElementById('box-survey-type').value;
+            const dataSource = document.getElementById('box-data-source').value;
+            
+            let items = [];
+            if (dataSource === 'mock') {
+                items = surveyType === 'q12' ? appState.manualFreqQ12 : appState.manualFreqQ12Plus;
+            } else {
+                const savedList = surveyType === 'q12' ? appState.q12Respondents : appState.q12PlusRespondents;
+                const questionsList = surveyType === 'q12' ? q12Questions : q12PlusQuestions;
+                
+                if (savedList.length === 0) {
+                    triggerToast("Tidak ada data responden tersimpan untuk disimpan snapshotnya!", false);
+                    return;
+                }
+
+                items = questionsList.map(q => {
+                    let sts = 0, ts = 0, cs = 0, s = 0, ss = 0;
+                    savedList.forEach(resp => {
+                        const score = resp.scores[q.id - 1];
+                        if (score === 1) sts++;
+                        else if (score === 2) ts++;
+                        else if (score === 3) cs++;
+                        else if (score === 4) s++;
+                        else if (score === 5) ss++;
+                    });
+                    return { sts, ts, cs, s, ss };
+                });
+            }
+
+            // Calculations overall
+            let sumTopBox = 0;
+            let sumSecondBox = 0;
+            items.forEach(item => {
+                const total = item.sts + item.ts + item.cs + item.s + item.ss;
+                sumTopBox += total > 0 ? (item.ss / total) * 100 : 0;
+                sumSecondBox += total > 0 ? ((item.s + item.ss) / total) * 100 : 0;
+            });
+
+            const avgTopBox = parseFloat((sumTopBox / items.length).toFixed(1));
+            const avgSecondBox = parseFloat((sumSecondBox / items.length).toFixed(1));
+
+            const snapshot = {
+                date: new Date().toLocaleTimeString('id-ID') + ", " + new Date().toLocaleDateString('id-ID'),
+                surveyType: surveyType.toUpperCase(),
+                dataSource: dataSource === 'mock' ? "Input Manual" : "Data Agregat Responden",
+                avgTopBox: `${avgTopBox}%`,
+                avgSecondBox: `${avgSecondBox}%`
+            };
+
+            appState.savedBoxSnapshots.unshift(snapshot);
+            renderBoxSnapshots();
+            triggerToast("Snapshot Analisis Box Berhasil Ditambahkan.");
+        }
+
+        // Render saved snapshots list rows
+        function renderBoxSnapshots() {
+            const container = document.getElementById('saved-box-snapshots');
+            if (appState.savedBoxSnapshots.length === 0) {
+                container.innerHTML = `
+                <tr class="text-slate-400 italic text-center">
+                    <td colspan="6" class="p-6">Belum ada snapshot tersimpan. Klik "Simpan Snapshot" di atas.</td>
+                </tr>
+                `;
+                return;
+            }
+
+            container.innerHTML = appState.savedBoxSnapshots.map((snap, idx) => `
+            <tr class="text-xs hover:bg-slate-50 transition border-b border-slate-100 print-card-avoid">
+                <td class="p-4 font-semibold text-slate-800">${snap.date}</td>
+                <td class="p-4"><span class="bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold">${snap.surveyType}</span></td>
+                <td class="p-4 text-slate-500">${snap.dataSource}</td>
+                <td class="p-4 font-bold text-emerald-700">${snap.avgTopBox}</td>
+                <td class="p-4 font-bold text-indigo-700">${snap.avgSecondBox}</td>
+                <td class="p-4 text-center print-hidden">
+                    <button onclick="deleteSnapshot(${idx})" class="p-2 hover:bg-rose-50 text-rose-600 rounded-lg transition" title="Hapus Snapshot">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </td>
+            </tr>
+            `).join("");
+
+            lucide.createIcons();
+        }
+
+        function deleteSnapshot(index) {
+            appState.savedBoxSnapshots.splice(index, 1);
+            renderBoxSnapshots();
+            triggerToast("Snapshot berhasil dihapus.");
+        }
+
+        // Manage Gallup Tab 5 Report Format toggles & layout switching
+        function switchReportFormat(format) {
+            appState.currentReportFormat = format;
+            
+            const btnQ12 = document.getElementById('btn-rep-q12');
+            const btnQ12Plus = document.getElementById('btn-rep-q12plus');
+
+            if (format === 'q12') {
+                btnQ12.className = "text-xs font-bold px-4 py-2.5 rounded-xl transition bg-emerald-600 text-white shadow";
+                btnQ12Plus.className = "text-xs font-bold px-4 py-2.5 rounded-xl transition text-slate-600 hover:text-slate-900";
+            } else {
+                btnQ12Plus.className = "text-xs font-bold px-4 py-2.5 rounded-xl transition bg-emerald-600 text-white shadow";
+                btnQ12.className = "text-xs font-bold px-4 py-2.5 rounded-xl transition text-slate-600 hover:text-slate-900";
+            }
+
+            renderExecutiveReport();
+        }
+
+        // Build executive statistics calculations and feed Chart.js
+        function renderExecutiveReport() {
+            const format = appState.currentReportFormat;
+            const list = format === 'q12' ? appState.q12Respondents : appState.q12PlusRespondents;
+            const questionsList = format === 'q12' ? q12Questions : q12PlusQuestions;
+
+            // Header Name Update
+            document.getElementById('report-title-header').innerText = format === 'q12' ? "LAPORAN INTEGRAL GALLUP Q12" : "LAPORAN INTEGRAL GALLUP Q12+ (MODERN)";
+
+            if (list.length === 0) {
+                // Display placeholder stats
+                document.getElementById('rep-card-total').innerText = "0";
+                document.getElementById('rep-card-grandmean').innerText = "0.00";
+                document.getElementById('rep-card-engaged').innerText = "0%";
+                document.getElementById('rep-card-status').innerText = "KOSONG";
+                
+                document.getElementById('rep-strengths-list').innerHTML = `<li class="text-slate-400 italic">Belum ada data kekuatan karena database survei ${format.toUpperCase()} kosong.</li>`;
+                document.getElementById('rep-priorities-list').innerHTML = `<li class="text-slate-400 italic">Belum ada prioritas tindakan.</li>`;
+                document.getElementById('rep-recommendations-text').innerHTML = `<p class="text-slate-400 italic">Selesaikan minimal satu pengisian kuesioner pada halaman kuesioner agar laporan ini dapat terhitung otomatis.</p>`;
+                
+                // Clear any existing chart rendering canvas if list empty
+                if (repProportionChartObj) repProportionChartObj.destroy();
+                if (repDimensionsChartObj) repDimensionsChartObj.destroy();
+                return;
+            }
+
+            // Calculations
+            const totalRespondents = list.length;
+            const grandMeanSum = list.reduce((a, b) => a + b.mean, 0);
+            const overallGrandMean = parseFloat((grandMeanSum / totalRespondents).toFixed(2));
+
+            const engagedCount = list.filter(r => r.status === "Engaged").length;
+            const notEngagedCount = list.filter(r => r.status === "Not Engaged").length;
+            const disengagedCount = list.filter(r => r.status === "Actively Disengaged").length;
+
+            const engagedRatio = parseFloat(((engagedCount / totalRespondents) * 100).toFixed(0));
+
+            // Interpretation Grand Mean Range
+            let levelStatus = "SEDANG";
+            let levelColor = "bg-amber-50 text-amber-700 border-amber-200";
+            if (overallGrandMean >= 4.00) {
+                levelStatus = "TINGGI";
+                levelColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
+            } else if (overallGrandMean < 3.50) {
+                levelStatus = "RENDAH";
+                levelColor = "bg-rose-50 text-rose-700 border-rose-200";
+            }
+
+            // Update DOM Cards
+            document.getElementById('rep-card-total').innerText = totalRespondents;
+            document.getElementById('rep-card-grandmean').innerText = overallGrandMean.toFixed(2);
+            document.getElementById('rep-card-engaged').innerText = `${engagedRatio}%`;
+            
+            const statusCard = document.getElementById('rep-card-status');
+            statusCard.innerText = levelStatus;
+            statusCard.className = `text-xs font-bold px-3 py-1.5 rounded-full inline-block uppercase tracking-wider ${levelColor}`;
+
+            // Calculate Item Means to find highest and lowest items
+            const itemMeans = questionsList.map(q => {
+                let sum = 0;
+                list.forEach(resp => {
+                    sum += resp.scores[q.id - 1] || 0;
+                });
+                return {
+                    id: q.id,
+                    idn: q.idn,
+                    dim: q.dim,
+                    mean: parseFloat((sum / totalRespondents).toFixed(2))
+                };
+            });
+
+            // Sort items to get highest (Strengths) and lowest (Priorities)
+            const sortedItems = [...itemMeans].sort((a, b) => b.mean - a.mean);
+            const strengths = sortedItems.slice(0, 3);
+            const priorities = [...itemMeans].sort((a, b) => a.mean - b.mean).slice(0, 3);
+
+            // Populating lists in HTML
+            document.getElementById('rep-strengths-list').innerHTML = strengths.map(s => `
+                <li class="flex items-start gap-2.5 break-inside-avoid">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1 flex-shrink-0"></span>
+                    <div>
+                        <strong class="text-slate-800 text-xs block">Q${String(s.id).padStart(2, '0')}: ${s.idn}</strong>
+                        <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">RATA-RATA: ${s.mean.toFixed(2)} (${s.dim})</span>
+                    </div>
+                </li>
+            `).join("");
+
+            document.getElementById('rep-priorities-list').innerHTML = priorities.map(p => `
+                <li class="flex items-start gap-2.5 break-inside-avoid">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 mt-1 flex-shrink-0"></span>
+                    <div>
+                        <strong class="text-rose-950 text-xs block">Q${String(p.id).padStart(2, '0')}: ${p.idn}</strong>
+                        <span class="text-[10px] uppercase tracking-wider font-bold text-rose-500">RATA-RATA: ${p.mean.toFixed(2)} (${p.dim})</span>
+                    </div>
+                </li>
+            `).join("");
+
+            // Generate customized report recommendations context based on calculations
+            let recommendationsHtml = "";
+            if (overallGrandMean >= 4.00) {
+                recommendationsHtml = `
+                <p><strong>Rekomendasi Pemeliharaan Budaya Keterlekatan (Kategori TINGGI):</strong></p>
+                <p>1. Budaya keterlekatan organisasi tergolong sangat kuat (Grand Mean &ge; 4.00). Fokus manajemen saat ini adalah melakukan program retensi berkelanjutan untuk menjaga momentum produktivitas tinggi.</p>
+                <p>2. Jadikan item terkuat Anda, yaitu <strong>"${strengths[0].idn}" (Mean: ${strengths[0].mean.toFixed(2)})</strong>, sebagai model praktik terbaik untuk diduplikasi pada departemen atau unit kerja lain yang memiliki skor engagement sedang.</p>
+                <p>3. Atasi area lemah minor Anda pada item <strong>"${priorities[0].idn}" (Mean: ${priorities[0].mean.toFixed(2)})</strong> melalui program mentoring HR atau forum terbuka tertutup dua arah agar tidak tergerus menjadi faktor disengagement di masa depan.</p>
+                `;
+            } else if (overallGrandMean < 3.50) {
+                recommendationsHtml = `
+                <p class="text-rose-900 font-bold">⚠️ Rekomendasi Pemulihan Krisis Keterlekatan (Kategori RENDAH):</p>
+                <p>1. Skor keterlekatan umum organisasi berada dalam level kritis (&lt; 3.50). Hal ini mengindikasikan risiko turnover yang tinggi, ketidakhadiran (absenteeism) yang membengkak, dan kualitas kerja tim pemasaran/SDM yang melemah.</p>
+                <p>2. Prioritaskan perbaikan mendasar pada elemen hierarki dasar. Segera adakan intervensi terfokus pada item terlemah Anda, yaitu <strong>"${priorities[0].idn}" (Mean: ${priorities[0].mean.toFixed(2)})</strong>. Sebagai contoh, jika ini mengenai kejelasan ekspektasi (Q1) atau peralatan kerja (Q2), manajemen puncak wajib menyediakan klarifikasi peran formal dan audit fasilitas kerja segera dalam 14 hari ke depan.</p>
+                <p>3. Selenggarakan pelatihan kepemimpinan (*Leadership Coaching*) khusus untuk para supervisor. Data Gallup menunjukkan kepedulian atasan langsung menyumbang 70% dari varians keterikatan karyawan.</p>
+                `;
+            } else {
+                recommendationsHtml = `
+                <p><strong>Rekomendasi Intervensi HR Taktis (Kategori SEDANG):</strong></p>
+                <p>1. Organisasi berada dalam fase transisi keterlekatan yang cukup baik, namun masih ada beberapa gap prioritas yang menahan tim dari performa puncak (Grand Mean: ${overallGrandMean.toFixed(2)}).</p>
+                <p>2. Dorong karyawan yang berada di kelompok "Not Engaged" (${notEngagedCount} orang) agar bergeser ke kategori "Engaged" melalui penguatan apresiasi emosional (Q4) dan percakapan karir progresif (Q11). Ini adalah taktik tercepat mendongkrak performa bisnis superior.</p>
+                <p>3. Selesaikan akar permasalahan pada item prioritas Anda, yaitu <strong>"${priorities[0].idn}" (Mean: ${priorities[0].mean.toFixed(2)})</strong>, melalui pembentukan forum gugus kendali mutu internal untuk menjamin dukungan kerja taktis harian.</p>
+                `;
+            }
+            document.getElementById('rep-recommendations-text').innerHTML = recommendationsHtml;
+
+            // Render Report Charts
+            renderReportProportionsChart(engagedCount, notEngagedCount, disengagedCount);
+            renderReportDimensionsChart(format, list, questionsList);
+        }
+
+        // Render Pie Chart of categories Engaged vs Not Engaged vs Disengaged
+        function renderReportProportionsChart(eng, notEng, dis) {
+            const ctx = document.getElementById('rep-chart-proportion').getContext('2d');
+            if (repProportionChartObj) {
+                repProportionChartObj.destroy();
+            }
+            repProportionChartObj = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Engaged', 'Not Engaged', 'Actively Disengaged'],
+                    datasets: [{
+                        data: [eng, notEng, dis],
+                        backgroundColor: ['#10b981', '#94a3b8', '#f43f5e'],
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Render Bar Chart comparing Hierarchical Dimensions in Executive Report
+        function renderReportDimensionsChart(format, list, questionsList) {
+            const ctx = document.getElementById('rep-chart-dimensions').getContext('2d');
+            
+            const dimensions = format === 'q12' ? 
+                ["Basic Needs", "Individual Contribution", "Teamwork", "Growth"] : 
+                ["Basic Needs", "Individual Contribution", "Teamwork", "Growth", "Modern Needs"];
+            
+            const averages = dimensions.map(dim => {
+                const dimScores = [];
+                list.forEach(resp => {
+                    questionsList.forEach(q => {
+                        if (q.dim === dim) {
+                            dimScores.push(resp.scores[q.id - 1] || 0);
+                        }
+                    });
+                });
+                const sum = dimScores.reduce((a, b) => a + b, 0);
+                return dimScores.length > 0 ? parseFloat((sum / dimScores.length).toFixed(2)) : 0;
+            });
+
+            if (repDimensionsChartObj) {
+                repDimensionsChartObj.destroy();
+            }
+
+            repDimensionsChartObj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dimensions,
+                    datasets: [{
+                        label: 'Nilai Rata-rata',
+                        data: averages,
+                        backgroundColor: format === 'q12' ? 'rgba(16, 185, 129, 0.85)' : 'rgba(79, 70, 229, 0.85)',
+                        borderColor: format === 'q12' ? 'rgb(16, 185, 129)' : 'rgb(79, 70, 229)',
+                        borderWidth: 1.5,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 5,
+                            ticks: { stepSize: 1, color: '#64748b' },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            ticks: { color: '#64748b', font: { size: 10, weight: '600' } },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
